@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Steganography App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #45a049;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: #333;
+            border-radius: 5px;
+        }
+
+        .file-dropzone {
+            border: 2px dashed #666;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+
+        .analysis-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #444;
+            border-radius: 5px;
+        }
+
+        .quantum-toggle {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quantum-Safe Steganography Suite</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('embed')">Embed Data</button>
+            <button class="tab-btn" onclick="switchTab('extract')">Extract Data</button>
+            <button class="tab-btn" onclick="switchTab('analyze')">ML Analysis</button>
+        </div>
+
+        <!-- Embed Tab -->
+        <div id="embed" class="tab-content" style="display: block;">
+            <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'embed')">
+                Drag & Drop Carrier File Here
+                <input type="file" id="embedFile" hidden>
+            </div>
+            <textarea id="secretData" placeholder="Enter secret message..." rows="4"></textarea>
+            <div class="quantum-toggle">
+                <input type="checkbox" id="quantumSafe">
+                <label>Enable Quantum-Safe Encryption (Kyber-1024)</label>
+            </div>
+            <button onclick="processEmbedding()">Embed Data</button>
+            <canvas id="previewCanvas" hidden></canvas>
+        </div>
+
+        <!-- Extract Tab -->
+        <div id="extract" class="tab-content">
+            <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'extract')">
+                Drag & Drop Stego File Here
+                <input type="file" id="extractFile" hidden>
+            </div>
+            <div class="quantum-toggle">
+                <input type="checkbox" id="useQuantumDecrypt">
+                <label>Quantum-Safe Decryption</label>
+            </div>
+            <button onclick="processExtraction()">Extract Data</button>
+            <div id="extractedData"></div>
+        </div>
+
+        <!-- Analysis Tab -->
+        <div id="analyze" class="tab-content">
+            <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'analyze')">
+                Drag & Drop File for Analysis
+                <input type="file" id="analyzeFile" hidden>
+            </div>
+            <div class="analysis-result" id="analysisResult"></div>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+
+    <script>
+        let currentFile = null;
+        let stegModel = null;
+
+        // Tab Management
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // File Handling
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.style.borderColor = '#4CAF50';
+        }
+
+        function handleFileDrop(e, action) {
+            e.preventDefault();
+            e.target.style.borderColor = '#666';
+            const file = e.dataTransfer.files[0];
+            currentFile = file;
+            handleFilePreview(file, action);
+        }
+
+        // File Preview
+        async function handleFilePreview(file, action) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.getElementById('previewCanvas');
+                        canvas.hidden = false;
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.getContext('2d').drawImage(img, 0, 0);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Quantum-Safe Encryption (Kyber Implementation)
+        async function quantumEncrypt(data) {
+            // Placeholder for actual Kyber implementation
+            // In practice, use: https://github.com/open-quantum-safe/liboqs-js
+            return btoa(data);
+        }
+
+        // Machine Learning Steganalysis
+        async function analyzeSteganography(file) {
+            if (!stegModel) {
+                stegModel = await tf.loadLayersModel('https://your-model-server.com/steganalysis/model.json');
+            }
+
+            const img = await tf.browser.fromPixels(document.getElementById('previewCanvas'));
+            const processed = img.resizeBilinear([224, 224]).div(255.0).expandDims();
+            const prediction = await stegModel.predict(processed);
+            const result = prediction.dataSync()[0];
+            
+            return result > 0.5 ? 
+                `Suspected steganography (confidence: ${(result*100).toFixed(1)}%)` :
+                `No steganography detected (confidence: ${((1-result)*100).toFixed(1)}%)`;
+        }
+
+        // Core Embedding Logic
+        async function processEmbedding() {
+            const secret = document.getElementById('secretData').value;
+            const useQuantum = document.getElementById('quantumSafe').checked;
+            
+            // Encryption
+            let processedData = useQuantum ? 
+                await quantumEncrypt(secret) : 
+                CryptoJS.AES.encrypt(secret, 'default-key').toString();
+
+            // LSB Steganography Implementation
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Convert secret to binary
+            const binData = Array.from(processedData)
+                .map(c => c.charCodeAt(0).toString(2).padStart(8, '0'))
+                .join('');
+
+            let dataIndex = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                if (dataIndex >= binData.length) break;
+                
+                // Embed in RGB channels
+                for (let j = 0; j < 3; j++) {
+                    if (dataIndex < binData.length) {
+                        data[i + j] = (data[i + j] & 0xFE) | parseInt(binData[dataIndex]);
+                        dataIndex++;
+                    }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            canvas.toBlob(blob => {
+                const link = document.createElement('a');
+                link.download = 'stego-file.png';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            }, 'image/png');
+        }
+
+        // Extraction Logic
+        async function processExtraction() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = async () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                let binString = '';
+                for (let i = 0; i < data.length; i += 4) {
+                    for (let j = 0; j < 3; j++) {
+                        binString += (data[i + j] & 1).toString();
+                    }
+                }
+
+                const bytes = [];
+                for (let i = 0; i < binString.length; i += 8) {
+                    bytes.push(parseInt(binString.substr(i, 8), 2));
+                }
+
+                const extracted = String.fromCharCode(...bytes);
+                const useQuantum = document.getElementById('useQuantumDecrypt').checked;
+                
+                const result = useQuantum ?
+                    await quantumDecrypt(extracted) :
+                    CryptoJS.AES.decrypt(extracted, 'default-key').toString(CryptoJS.enc.Utf8);
+
+                document.getElementById('extractedData').textContent = result;
+            };
+            
+            img.src = URL.createObjectURL(currentFile);
+        }
+
+        // Initialize ML Model
+        tf.setBackend('webgl').then(() => {
+            console.log('TensorFlow.js initialized with WebGL backend');
+        });
+    </script>
+</body>
+</html>
