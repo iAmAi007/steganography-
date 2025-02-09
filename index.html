@@ -59,6 +59,10 @@
             cursor: pointer;
         }
 
+        .file-upload {
+            margin-top: 10px;
+        }
+
         .analysis-result {
             margin-top: 20px;
             padding: 15px;
@@ -110,7 +114,7 @@
             <textarea id="textToEncrypt" class="encrypt-textarea" placeholder="Type or paste text to encrypt..."></textarea>
             <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'encrypt')">
                 Drag & Drop File to Encrypt
-                <input type="file" id="encryptFile" hidden>
+                <input type="file" id="encryptFile" class="file-upload" onchange="handleFileUpload(event, 'encrypt')">
             </div>
             <div class="quantum-toggle">
                 <input type="checkbox" id="encryptQuantumSafe">
@@ -125,7 +129,7 @@
             <textarea id="textToDecrypt" class="encrypt-textarea" placeholder="Type or paste text to decrypt..."></textarea>
             <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'decrypt')">
                 Drag & Drop File to Decrypt
-                <input type="file" id="decryptFile" hidden>
+                <input type="file" id="decryptFile" class="file-upload" onchange="handleFileUpload(event, 'decrypt')">
             </div>
             <div class="quantum-toggle">
                 <input type="checkbox" id="decryptQuantumSafe">
@@ -139,7 +143,7 @@
         <div id="analyze" class="tab-content">
             <div class="file-dropzone" ondragover="handleDragOver(event)" ondrop="handleFileDrop(event, 'analyze')">
                 Drag & Drop File for Analysis
-                <input type="file" id="analyzeFile" hidden>
+                <input type="file" id="analyzeFile" class="file-upload" onchange="handleFileUpload(event, 'analyze')">
             </div>
             <div class="analysis-result" id="analysisResult"></div>
         </div>
@@ -171,6 +175,13 @@
             const file = e.dataTransfer.files[0];
             currentFile = file;
             document.getElementById(`${action}File`).files = e.dataTransfer.files;
+        }
+
+        // File Upload Handling
+        function handleFileUpload(e, action) {
+            const file = e.target.files[0];
+            currentFile = file;
+            document.getElementById(`${action}File`).files = e.target.files;
         }
 
         // Encryption Logic
